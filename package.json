@@ -1,0 +1,23 @@
+{
+  "name": "syncano-todomvc",
+  "version": "0.1.0",
+  "description": "Syncano Enabled Todo MVC projects.",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/Syncano/todomvc.git"
+  },
+  "keywords": [
+    "todomvc",
+    "syncano",
+    "realtime"
+  ],
+  "author": "Kelly J Andrews",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/Syncano/todomvc/issues"
+  },
+  "homepage": "https://github.com/Syncano/todomvc#readme",
+  "devDependencies": {
+    "http-server": "^0.8.0"
+  }
+}

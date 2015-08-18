@@ -1,0 +1,6 @@
+{
+  "name": "jquery-syncano-todomvc",
+  "dependencies": {
+    "syncano": "~0.2.5"
+  }
+}
