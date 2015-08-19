@@ -1,0 +1,6 @@
+{
+  "name": "react-syncano-todomvc",
+  "dependencies": {
+    "syncano": "~0.2.5"
+  }
+}
