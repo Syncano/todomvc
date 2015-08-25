@@ -83,13 +83,14 @@ var app = app || {};
 			var footer;
 			var main;
 			var todos = this.props.model.todos;
+			console.log(todos);
 
 			var shownTodos = todos.filter(function (todo) {
 				switch (this.state.nowShowing) {
 				case app.ACTIVE_TODOS:
-					return !todo.completed;
+					return !todo.iscompleted;
 				case app.COMPLETED_TODOS:
-					return todo.completed;
+					return todo.iscompleted;
 				default:
 					return true;
 				}
@@ -111,7 +112,7 @@ var app = app || {};
 			}, this);
 
 			var activeTodoCount = todos.reduce(function (accum, todo) {
-				return todo.completed ? accum : accum + 1;
+				return todo.iscompleted ? accum : accum + 1;
 			}, 0);
 
 			var completedCount = todos.length - activeTodoCount;

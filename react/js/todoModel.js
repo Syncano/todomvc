@@ -3,6 +3,30 @@
 /*jshint trailing:false */
 /*jshint newcap:false */
 var app = app || {};
+var syncano = new Syncano({
+	apiKey: "b52cb72f9b01c614d882bc5712a3f32b97cb9001",
+	instance: "todolist",
+	userKey: "680405847ef8175e53ee7c834fd9e27ca6312d22"
+});
+
+var todos = new syncano.class('todo');
+var server = {
+	getTodos: function() {
+		var filter = {fields: {include: ['iscompleted', 'title', 'id']}};
+		return todos.dataobject().list(filter);
+	},
+	createTodo: function(todo) {
+		todo.channel = 'todo-list';
+		todo.other_permissions = 'full';
+		return todos.dataobject().add(todo);
+	},
+	updateTodo: function(todo) {
+		return todos.dataobject(todo.id).update(todo);
+	},
+	deleteTodo: function(todo) {
+		return todos.dataobject(todo.id).delete();
+	}
+};
 
 (function () {
 	'use strict';
@@ -15,7 +39,16 @@ var app = app || {};
 	// separate out parts of your application.
 	app.TodoModel = function (key) {
 		this.key = key;
-		this.todos = Utils.store(key);
+		this.todos = [];
+		// this.todos = Utils.store(key);
+
+		server.getTodos().then(function(res) {
+			console.log(res.objects);
+			this.todos = res.objects;
+			this.inform();
+			this.watch(undefined);
+		}.bind(this));
+
 		this.onChanges = [];
 	};
 
@@ -24,7 +57,7 @@ var app = app || {};
 	};
 
 	app.TodoModel.prototype.inform = function () {
-		Utils.store(this.key, this.todos);
+		// Utils.store(this.key, this.todos);
 		this.onChanges.forEach(function (cb) { cb(); });
 	};
 
@@ -32,10 +65,19 @@ var app = app || {};
 		this.todos = this.todos.concat({
 			id: Utils.uuid(),
 			title: title,
-			completed: false
+			iscompleted: false
 		});
 
-		this.inform();
+		var todo = {
+			title: title,
+			iscompleted: false
+		};
+
+		server.createTodo(todo).then(function (res) {
+			this.inform();
+		}.bind(this));
+
+		
 	};
 
 	app.TodoModel.prototype.toggleAll = function (checked) {
@@ -44,20 +86,26 @@ var app = app || {};
 		// we use map() and filter() everywhere instead of mutating the array or
 		// todo items themselves.
 		this.todos = this.todos.map(function (todo) {
-			return Utils.extend({}, todo, {completed: checked});
+			return Utils.extend({}, todo, {iscompleted: checked});
 		});
 
 		this.inform();
 	};
 
 	app.TodoModel.prototype.toggle = function (todoToToggle) {
-		this.todos = this.todos.map(function (todo) {
-			return todo !== todoToToggle ?
-				todo :
-				Utils.extend({}, todo, {completed: !todo.completed});
-		});
+		todoToToggle.iscompleted = !todoToToggle.iscompleted;
+		console.log(todoToToggle);
+		server.updateTodo(todoToToggle).then(function(res) {
+			console.log(res);
+			this.inform();
+		}.bind(this));
+		// this.todos = this.todos.map(function (todo) {
+		// 	return todo !== todoToToggle ?
+		// 		todo :
+		// 		Utils.extend({}, todo, {iscompleted: !todo.iscompleted});
+		// });
 
-		this.inform();
+		// this.inform();
 	};
 
 	app.TodoModel.prototype.destroy = function (todo) {
@@ -78,10 +126,74 @@ var app = app || {};
 
 	app.TodoModel.prototype.clearCompleted = function () {
 		this.todos = this.todos.filter(function (todo) {
-			return !todo.completed;
+			return !todo.iscompleted;
 		});
 
 		this.inform();
 	};
 
+	app.TodoModel.prototype.getIndex = function(id) {
+		var todos = this.todos;
+		var i = todos.length;
+
+		while (i--) {
+			if (todos[i].id === id) {
+				return i;
+			}
+		}
+	};
+
+	app.TodoModel.prototype.watch = function (lastId) {
+		var self = this;
+		syncano.channel('todo-list').poll({lastId: lastId})
+		.then(function(res) {
+			if (res !== undefined) {
+				lastId = res.id;
+				console.log(res.payload);
+				console.log(self.todos);
+				var action = res.action;
+				if (action === "update") {
+					var i = self.getIndex(res.payload.id);
+
+					if (res.payload.title) {
+						self.todos[i].title = res.payload.title;
+					}
+
+					if (typeof res.payload.iscompleted != 'undefined') {
+						self.todos[i].iscompleted = res.payload.iscompleted;
+					}
+
+					if(res.payload.title === "") {
+						self.todos.splice(i, 1);
+					}
+
+					self.inform();
+
+				} else if (action === "create") {
+					var todo = {
+						id: res.payload.id,
+						title: res.payload.title,
+						iscompleted: res.payload.iscompleted
+					};
+
+					self.todos.push(todo);
+
+					self.inform();
+
+				} else if (action === "delete") {
+					self.todos.splice(self.getIndex(res.payload.id), 1);
+					self.inform();
+				}
+
+			}
+			self.watch(lastId);
+		})
+		.catch(function(err) {
+			console.log(err);
+			self.watch(lastId);
+		});
+	};
+
 })();
+
+//TODO Parse payload!
