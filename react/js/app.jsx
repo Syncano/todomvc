@@ -83,7 +83,6 @@ var app = app || {};
 			var footer;
 			var main;
 			var todos = this.props.model.todos;
-			console.log(todos);
 
 			var shownTodos = todos.filter(function (todo) {
 				switch (this.state.nowShowing) {

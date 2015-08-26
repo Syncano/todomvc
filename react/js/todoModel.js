@@ -40,10 +40,8 @@ var server = {
 	app.TodoModel = function (key) {
 		this.key = key;
 		this.todos = [];
-		// this.todos = Utils.store(key);
 
 		server.getTodos().then(function(res) {
-			console.log(res.objects);
 			this.todos = res.objects;
 			this.inform();
 			this.watch(undefined);
@@ -57,17 +55,10 @@ var server = {
 	};
 
 	app.TodoModel.prototype.inform = function () {
-		// Utils.store(this.key, this.todos);
 		this.onChanges.forEach(function (cb) { cb(); });
 	};
 
 	app.TodoModel.prototype.addTodo = function (title) {
-		this.todos = this.todos.concat({
-			id: Utils.uuid(),
-			title: title,
-			iscompleted: false
-		});
-
 		var todo = {
 			title: title,
 			iscompleted: false
@@ -76,8 +67,6 @@ var server = {
 		server.createTodo(todo).then(function (res) {
 			this.inform();
 		}.bind(this));
-
-		
 	};
 
 	app.TodoModel.prototype.toggleAll = function (checked) {
@@ -94,25 +83,13 @@ var server = {
 
 	app.TodoModel.prototype.toggle = function (todoToToggle) {
 		todoToToggle.iscompleted = !todoToToggle.iscompleted;
-		console.log(todoToToggle);
 		server.updateTodo(todoToToggle).then(function(res) {
-			console.log(res);
 			this.inform();
 		}.bind(this));
-		// this.todos = this.todos.map(function (todo) {
-		// 	return todo !== todoToToggle ?
-		// 		todo :
-		// 		Utils.extend({}, todo, {iscompleted: !todo.iscompleted});
-		// });
-
-		// this.inform();
 	};
 
 	app.TodoModel.prototype.destroy = function (todo) {
-		this.todos = this.todos.filter(function (candidate) {
-			return candidate !== todo;
-		});
-
+		server.deleteTodo(todo);
 		this.inform();
 	};
 
@@ -125,8 +102,16 @@ var server = {
 	};
 
 	app.TodoModel.prototype.clearCompleted = function () {
-		this.todos = this.todos.filter(function (todo) {
-			return !todo.iscompleted;
+		var completed = this.todos.map(function (todo) {
+			if (todo.iscompleted) {
+				return todo;
+			}
+		});
+
+		completed.forEach(function (todo) {
+			if (todo) {
+				server.deleteTodo(todo);
+			}
 		});
 
 		this.inform();
@@ -149,8 +134,6 @@ var server = {
 		.then(function(res) {
 			if (res !== undefined) {
 				lastId = res.id;
-				console.log(res.payload);
-				console.log(self.todos);
 				var action = res.action;
 				if (action === "update") {
 					var i = self.getIndex(res.payload.id);
@@ -189,11 +172,7 @@ var server = {
 			self.watch(lastId);
 		})
 		.catch(function(err) {
-			console.log(err);
 			self.watch(lastId);
 		});
 	};
-
 })();
-
-//TODO Parse payload!
