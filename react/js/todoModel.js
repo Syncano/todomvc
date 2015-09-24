@@ -130,49 +130,46 @@ var server = {
 
 	app.TodoModel.prototype.watch = function (lastId) {
 		var self = this;
-		syncano.channel('todo-list').poll({lastId: lastId})
-		.then(function(res) {
-			if (res !== undefined) {
-				lastId = res.id;
-				var action = res.action;
-				if (action === "update") {
-					var i = self.getIndex(res.payload.id);
 
-					if (res.payload.title) {
-						self.todos[i].title = res.payload.title;
-					}
+		var realtime = syncano.channel('todo-list').watch();
 
-					if (typeof res.payload.iscompleted != 'undefined') {
-						self.todos[i].iscompleted = res.payload.iscompleted;
-					}
+	    realtime.on('create', function(res) {
+			var todo = {
+				id: res.id,
+				title: res.title,
+				iscompleted: res.iscompleted
+			};
 
-					if(res.payload.title === "") {
-						self.todos.splice(i, 1);
-					}
+			self.todos.push(todo);
 
-					self.inform();
+			self.inform();
+	    });
 
-				} else if (action === "create") {
-					var todo = {
-						id: res.payload.id,
-						title: res.payload.title,
-						iscompleted: res.payload.iscompleted
-					};
+	    realtime.on('update', function(res) {
+			var i = self.getIndex(res.id);
 
-					self.todos.push(todo);
-
-					self.inform();
-
-				} else if (action === "delete") {
-					self.todos.splice(self.getIndex(res.payload.id), 1);
-					self.inform();
-				}
-
+			if (res.title) {
+				self.todos[i].title = res.title;
 			}
-			self.watch(lastId);
-		})
-		.catch(function(err) {
-			self.watch(lastId);
-		});
+
+			if (typeof res.iscompleted != 'undefined') {
+				self.todos[i].iscompleted = res.iscompleted;
+			}
+
+			if (res.title === "") {
+				self.todos.splice(i, 1);
+			}
+
+			self.inform();
+	    });
+
+	    realtime.on('delete', function(res) {
+			self.todos.splice(self.getIndex(res.id), 1);
+			self.inform();
+	    });
+
+	    realtime.on('error', function(res) {
+			console.log(res);
+	    });
 	};
 })();
