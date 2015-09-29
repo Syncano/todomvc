@@ -204,6 +204,7 @@ jQuery(function ($) {
 			}
 
 			var i = this.indexFromEl(el);
+			this.todos[i].title = val;
 
 			if (val) {
 				server.updateTodo(this.todos[i]);
