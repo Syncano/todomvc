@@ -133,7 +133,7 @@
 			},
 
 			removeTodo: function (todo) {
-				server.deleteTodo(todo)
+				server.deleteTodo(todo);
 			},
 
 			editTodo: function (todo) { //when you click on textbox
@@ -149,6 +149,8 @@
 				todo.title = todo.title.trim();
 				if (!todo.title) {
 					this.removeTodo(todo);
+				} else {
+					server.updateTodo(todo);
 				}
 			},
 
