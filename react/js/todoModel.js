@@ -98,6 +98,8 @@ var server = {
 			return todo !== todoToSave ? todo : Utils.extend({}, todo, {title: text});
 		});
 
+		server.updateTodo(todoToSave);
+
 		this.inform();
 	};
 
