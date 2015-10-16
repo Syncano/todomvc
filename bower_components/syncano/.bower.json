@@ -1,0 +1,34 @@
+{
+  "name": "syncano",
+  "version": "0.2.5",
+  "description": "A library to intereact with the Syncano API.",
+  "homepage": "https://github.com/Syncano/syncano-js-lib",
+  "authors": [
+    "Kelly Andrews <kelly@kellyjandrews.com>"
+  ],
+  "main": [
+    "dist/syncano.min.js"
+  ],
+  "license": "ISC",
+  "ignore": [
+    "**/.*",
+    "node_modules",
+    "bower_components",
+    "test",
+    "tests"
+  ],
+  "dependencies": {
+    "bluebird": "~2.9.34",
+    "lodash": "~3.10.0"
+  },
+  "_release": "0.2.5",
+  "_resolution": {
+    "type": "version",
+    "tag": "v0.2.5",
+    "commit": "644487b19f75ecb886c70a7828df7e2cc1525af8"
+  },
+  "_source": "git://github.com/Syncano/syncano-js-lib.git",
+  "_target": "~0.2.5",
+  "_originalSource": "syncano",
+  "_direct": true
+}
